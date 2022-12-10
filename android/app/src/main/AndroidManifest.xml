@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.rifas_bvwood">
    <application
-        android:label="rifas_bvwood"
+        android:label="Rifas BvWood__"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
