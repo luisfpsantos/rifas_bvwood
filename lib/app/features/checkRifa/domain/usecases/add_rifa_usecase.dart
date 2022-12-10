@@ -21,7 +21,7 @@ class AddRifaUsecaseImp implements AddRifaUsecase {
     final regExpNumberRifa = RegExp(r'[0-9]+');
 
     final regExpPlayers = RegExp(
-      r'[0-9]{2}\-[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]+((\s)?([A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]+)?)*',
+      r'[0-9]{2}\-(\s)?[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]+((\s)?([A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]+)?)*',
     );
 
     final idMatch = regExpNumberRifa.firstMatch(rifa);

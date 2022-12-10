@@ -1,11 +1,13 @@
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/rifa_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/usecases/add_rifa_usecase.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/usecases/check_rifa.usecase.dart';
-import 'package:rifas_bvwood/app/features/checkRifa/presenter/stores/checkRifaStore/check_rifa_states.dart';
-import 'package:rifas_bvwood/app/features/checkRifa/presenter/stores/checkRifaStore/check_rifa_store.dart';
+import 'package:rifas_bvwood/app/features/checkRifa/presenter/blocs/checkRifabloc/check_rifa_events.dart';
+import 'package:rifas_bvwood/app/features/checkRifa/presenter/blocs/checkRifabloc/check_rifa_states.dart';
+import 'package:rifas_bvwood/app/features/checkRifa/presenter/blocs/checkRifabloc/check_rifa_bloc.dart';
 
 class CheckRifaView extends StatefulWidget {
   const CheckRifaView({super.key});
@@ -15,7 +17,7 @@ class CheckRifaView extends StatefulWidget {
 }
 
 class _CheckRifaViewState extends State<CheckRifaView> {
-  final store = CheckRifaStore(
+  final bloc = CheckRifaBloc(
     AddRifaUsecaseImp(),
     CheckRifaUsecaseImp(),
   );
@@ -28,21 +30,11 @@ class _CheckRifaViewState extends State<CheckRifaView> {
   final snackBar = const SnackBar(content: Text("Copido com sucesso!"));
   List<RifaEntity> rifas = [];
   int numeros = 0;
+  num total = 0;
+  bool comValor = false;
 
   @override
   Widget build(BuildContext context) {
-    store.addListener(() {
-      if (store.value is AddSuccessState) {
-        rifas.add((store.value as AddSuccessState).rifa);
-      }
-
-      if (store.value is ShowResultState) {
-        for (var player in (store.value as ShowResultState).players) {
-          numeros += player.times;
-        }
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(title: const Text('Conferencia Rifas')),
       body: SingleChildScrollView(
@@ -69,18 +61,20 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    ValueListenableBuilder<CheckRifaStates>(
-                      valueListenable: store,
-                      builder: (context, state, _) {
+                    BlocBuilder<CheckRifaBloc, CheckRifaStates>(
+                      bloc: bloc,
+                      builder: (_, state) {
                         Widget btn = Container();
 
                         if (state is! IdleState) {
                           btn = ElevatedButton(
                             onPressed: () {
                               rifas = [];
+                              numeros = 0;
+                              total = 0;
                               rifaController.text = '';
                               valorController.text = '';
-                              store.value = IdleState();
+                              bloc.add(BtnLimpar());
                             },
                             child: const Text('Limpar'),
                           );
@@ -93,14 +87,13 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
                   children: [
                     const SizedBox(
                       height: 10,
                     ),
-                    ValueListenableBuilder<CheckRifaStates>(
-                      valueListenable: store,
-                      builder: (context, state, _) {
+                    BlocBuilder<CheckRifaBloc, CheckRifaStates>(
+                      bloc: bloc,
+                      builder: (context, state) {
                         Widget title = Container();
 
                         if (state is AddSuccessState) {
@@ -116,9 +109,9 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                     const SizedBox(
                       height: 15,
                     ),
-                    ValueListenableBuilder<CheckRifaStates>(
-                      valueListenable: store,
-                      builder: (context, state, _) {
+                    BlocBuilder<CheckRifaBloc, CheckRifaStates>(
+                      bloc: bloc,
+                      builder: (context, state) {
                         Widget title = const Text('Cole a rifa Abaixo:');
 
                         if (state is ErrorState) {
@@ -129,10 +122,21 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                         }
 
                         if (state is ShowResultState) {
+                          numeros = 0;
+                          total = 0;
+                          for (var i in rifas) {
+                            for (var j in i.players) {
+                              numeros += j.times;
+                              total += j.value;
+                            }
+                          }
                           title = Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Resultado: $numeros conferidos'),
+                              Expanded(
+                                child: Text(
+                                    'Números conferidos: $numeros. Valor total: R\$ ${total.toStringAsFixed(2)}'),
+                              ),
                               ElevatedButton(
                                 onPressed: () async {
                                   await Clipboard.setData(
@@ -154,9 +158,9 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                     const SizedBox(
                       height: 15,
                     ),
-                    ValueListenableBuilder<CheckRifaStates>(
-                      valueListenable: store,
-                      builder: (context, state, _) {
+                    BlocBuilder<CheckRifaBloc, CheckRifaStates>(
+                      bloc: bloc,
+                      builder: (context, state) {
                         Widget result = TextField(
                           controller: rifaController,
                           maxLines: null,
@@ -166,10 +170,18 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                         );
 
                         if (state is ShowResultState) {
-                          String s = 'Lista com dezenas escolhidas:\n';
-                          for (var player in state.players) {
-                            s += '${player.name} ${player.times}\n';
+                          String s = 'Lista com dezenas escolhidas:\n\n';
+                          if (comValor) {
+                            for (var player in state.players) {
+                              s +=
+                                  '${player.name} ${player.times} - R\$: ${player.value.toStringAsFixed(2)}\n\n';
+                            }
+                          } else {
+                            for (var player in state.players) {
+                              s += '${player.name} ${player.times}\n\n';
+                            }
                           }
+
                           rifaController.text = s;
                           result = TextField(
                             controller: rifaController,
@@ -181,38 +193,99 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                           );
                         }
 
+                        if (state is LoadingState) {
+                          result = const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
                         return result;
                       },
                     ),
                     Container(
                       margin: const EdgeInsets.only(top: 15),
-                      child: ValueListenableBuilder<CheckRifaStates>(
-                        valueListenable: store,
-                        builder: (context, state, _) {
+                      child: BlocConsumer<CheckRifaBloc, CheckRifaStates>(
+                        bloc: bloc,
+                        listener: (context, state) {
+                          if (state is AddSuccessState) {
+                            rifas.add(state.rifa);
+                          }
+                        },
+                        builder: (_, state) {
                           Widget options = Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               ElevatedButton(
-                                  onPressed: () {
-                                    store.addRifa(
-                                      rifaController.text,
-                                      valorRifaFormatter.getUnformattedValue(),
-                                    );
-                                    rifaController.text = '';
-                                    valorController.text = '';
-                                  },
-                                  child: const Text('Adicioar/Validar rifa')),
-                              const SizedBox(width: 50),
+                                onPressed: () {
+                                  bloc.add(BtnAddRifa(
+                                    rifaController.text,
+                                    valorRifaFormatter.getUnformattedValue(),
+                                  ));
+
+                                  rifaController.text = '';
+                                  valorController.text = '';
+                                },
+                                child: const Text('Adicioar/Validar rifa'),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
                               ElevatedButton(
-                                  onPressed: () {
-                                    store.checkRifa(rifas);
-                                  },
-                                  child: const Text('Conferir'))
+                                onPressed: () {
+                                  bloc.add(BtnCheckRifa(rifas));
+                                },
+                                child: const Text('Conferir'),
+                              ),
+                              Checkbox(
+                                  value: comValor,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      comValor = value!;
+                                    });
+                                  }),
+                              const Expanded(child: Text('Com valor?'))
                             ],
                           );
 
                           if (state is LoadingState) {
                             options = const CircularProgressIndicator();
+                          }
+
+                          if (state is ShowResultState) {
+                            options = Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    bloc.add(BtnAddRifa(
+                                      rifaController.text,
+                                      valorRifaFormatter.getUnformattedValue(),
+                                    ));
+
+                                    rifaController.text = '';
+                                    valorController.text = '';
+                                  },
+                                  child: const Text('Adicioar/Validar rifa'),
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    bloc.add(BtnCheckRifa(rifas));
+                                  },
+                                  child: const Text('Conferir'),
+                                ),
+                                Checkbox(
+                                    value: comValor,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        comValor = value!;
+                                      });
+                                    }),
+                                const Expanded(child: Text('Com valor?'))
+                              ],
+                            );
                           }
 
                           return options;
