@@ -1,11 +1,15 @@
+import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/choice_entity.dart';
+
 class PlayerEntity {
-  final String name;
-  final num value;
-  final int times;
+  String name;
+  num value;
+  int times;
+  List<ChoiceEntity> choiceNumbers;
 
   PlayerEntity({
     required this.name,
     required this.value,
     required this.times,
+    required this.choiceNumbers,
   });
 }

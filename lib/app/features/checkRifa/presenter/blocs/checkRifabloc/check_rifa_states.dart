@@ -1,5 +1,4 @@
 import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/player_entity.dart';
-import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/rifa_entity.dart';
 
 abstract class CheckRifaStates {}
 
@@ -13,11 +12,7 @@ class ErrorState extends CheckRifaStates {
 
 class LoadingState extends CheckRifaStates {}
 
-class AddSuccessState extends CheckRifaStates {
-  final RifaEntity rifa;
-
-  AddSuccessState(this.rifa);
-}
+class HaveRifasState extends CheckRifaStates {}
 
 class ShowResultState extends CheckRifaStates {
   final List<PlayerEntity> players;

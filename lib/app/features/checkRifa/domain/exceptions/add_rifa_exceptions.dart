@@ -1,13 +1,13 @@
-abstract class AddRifaExceptions {}
-
-class InvalidArgument extends AddRifaExceptions {
+abstract class AddRifaExceptions {
   final String msg;
 
-  InvalidArgument(this.msg);
+  AddRifaExceptions(this.msg);
+}
+
+class InvalidArgument extends AddRifaExceptions {
+  InvalidArgument(super.msg);
 }
 
 class UnableToDetect extends AddRifaExceptions {
-  final String msg;
-
-  UnableToDetect(this.msg);
+  UnableToDetect(super.msg);
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rifas_bvwood/app/features/checkRifa/presenter/views/check_rifa_view.dart';
+
+import 'app/features/checkRifa/presenter/views/check_rifa_view.dart';
 
 void main() {
   runApp(const MyApp());

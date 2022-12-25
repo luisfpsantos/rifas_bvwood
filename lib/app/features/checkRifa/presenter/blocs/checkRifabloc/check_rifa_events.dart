@@ -5,8 +5,15 @@ abstract class CheckRifaEvents {}
 class BtnAddRifa extends CheckRifaEvents {
   final String rifa;
   final num value;
+  final int? promocao;
+  final num? valuePromocao;
 
-  BtnAddRifa(this.rifa, this.value);
+  BtnAddRifa({
+    required this.rifa,
+    required this.value,
+    this.promocao,
+    this.valuePromocao,
+  });
 }
 
 class BtnCheckRifa extends CheckRifaEvents {
@@ -15,4 +22,6 @@ class BtnCheckRifa extends CheckRifaEvents {
   BtnCheckRifa(this.rifas);
 }
 
-class BtnLimpar extends CheckRifaEvents {}
+class OnHaveRifas extends CheckRifaEvents {}
+
+class CleanErrors extends CheckRifaEvents {}

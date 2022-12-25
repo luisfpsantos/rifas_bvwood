@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/choice_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/player_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/rifa_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/exceptions/check_rifa_exceptions.dart';
@@ -29,16 +30,23 @@ class CheckRifaUsecaseImp implements CheckRifaUsecase {
     for (var name in playersNames) {
       int vezes = 0;
       num value = 0;
+      List<ChoiceEntity> choices = [];
       for (var rifa in rifas) {
         for (var player in rifa.players) {
           if (name == player.name) {
             vezes += player.times;
             value += player.value;
+            choices.addAll(player.choiceNumbers);
             break;
           }
         }
       }
-      players.add(PlayerEntity(name: name, value: value, times: vezes));
+      players.add(PlayerEntity(
+        name: name,
+        value: value,
+        times: vezes,
+        choiceNumbers: choices,
+      ));
     }
 
     players.sort((a, b) => a.name.compareTo(b.name));

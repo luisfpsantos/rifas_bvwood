@@ -1,9 +1,13 @@
-abstract class CheckRifaExceptions {}
-
-class InvalidArgumentOnCheck extends CheckRifaExceptions {
+abstract class CheckRifaExceptions {
   final String msg;
 
-  InvalidArgumentOnCheck(this.msg);
+  CheckRifaExceptions(this.msg);
 }
 
-class NamesNotFound extends CheckRifaExceptions {}
+class InvalidArgumentOnCheck extends CheckRifaExceptions {
+  InvalidArgumentOnCheck(super.msg);
+}
+
+class NamesNotFound extends CheckRifaExceptions {
+  NamesNotFound(super.msg);
+}
