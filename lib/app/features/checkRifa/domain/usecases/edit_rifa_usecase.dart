@@ -46,7 +46,7 @@ class EditRifaUsecaseImp implements EditRifaUsecase {
         player.choiceNumbers.addAll(choiceNumbers);
 
         if (player.times > rifa.numbersPromotion) {
-          player.value = times * rifa.promotionValue;
+          player.value = player.times * rifa.promotionValue;
         } else {
           player.value += value;
         }
