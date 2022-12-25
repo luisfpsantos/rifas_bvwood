@@ -84,9 +84,22 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                             tileColor: Colors.grey[200],
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15)),
-                            trailing: IconButton(
-                                onPressed: () => _editRifaModal(_, rifas[i]),
-                                icon: const Icon(Icons.edit)),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                    onPressed: () =>
+                                        _editRifaModal(_, rifas[i]),
+                                    icon: const Icon(Icons.edit)),
+                                IconButton(
+                                  onPressed: () {
+                                    _bloc.add(BtnRemoveRifa(rifas, rifas[i]));
+                                  },
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                )
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -95,7 +108,7 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                   const SizedBox(height: 10),
                   ElevatedButton(
                       onPressed: () => _bloc.add(BtnCheckRifa(rifas)),
-                      child: const Text('Conferir rifas')),
+                      child: const Text('Conferir Rifas')),
                   const SizedBox(height: 10),
                 ],
               );
@@ -129,7 +142,7 @@ class _CheckRifaViewState extends State<CheckRifaView> {
           '${player.name} ${player.times} __ R\$ ${player.value.toStringAsFixed(2)}\n     ${player.choiceNumbers.map((e) => 'N° ${e.number.toString().padLeft(2, '0')} __ Rifa: ${e.idRifa}\n     ').join()}\n\n';
     }
 
-    result.text = rifaAll;
+    result.text = rifaWithoutValues;
 
     await showDialog(
       context: context,

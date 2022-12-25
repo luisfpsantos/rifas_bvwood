@@ -11,6 +11,7 @@ class CheckRifaBloc extends Bloc<CheckRifaEvents, CheckRifaStates> {
   ) : super(IdleState()) {
     on<BtnCheckRifa>((event, emit) => _checkRifa(event, emit));
     on<OnHaveRifas>((event, emit) => emit(HaveRifasState()));
+    on<BtnRemoveRifa>((event, emit) => _removeRifa(event, emit));
   }
 
   void _checkRifa(event, emit) {
@@ -22,5 +23,17 @@ class CheckRifaBloc extends Bloc<CheckRifaEvents, CheckRifaStates> {
       (error) => emit(ErrorState(error.msg)),
       (succes) => emit(ShowResultState(succes)),
     );
+  }
+
+  void _removeRifa(BtnRemoveRifa event, emit) {
+    emit(LoadingState());
+    event.rifas.remove(event.rifaToRemove);
+
+    if (event.rifas.isNotEmpty) {
+      emit(HaveRifasState());
+      return;
+    }
+
+    emit(IdleState());
   }
 }

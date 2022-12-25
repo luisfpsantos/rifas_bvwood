@@ -22,6 +22,13 @@ class BtnCheckRifa extends CheckRifaEvents {
   BtnCheckRifa(this.rifas);
 }
 
+class BtnRemoveRifa extends CheckRifaEvents {
+  final List<RifaEntity> rifas;
+  final RifaEntity rifaToRemove;
+
+  BtnRemoveRifa(this.rifas, this.rifaToRemove);
+}
+
 class OnHaveRifas extends CheckRifaEvents {}
 
 class CleanErrors extends CheckRifaEvents {}
