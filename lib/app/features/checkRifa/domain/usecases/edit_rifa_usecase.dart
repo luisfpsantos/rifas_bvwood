@@ -20,7 +20,7 @@ class EditRifaUsecaseImp implements EditRifaUsecase {
       return left(InvalidArgument('Necessario informar nome'));
     }
 
-    if (newName.trim() == oldName) {
+    if (newName.trim().toUpperCase() == oldName) {
       return left(InvalidArgument('Novo nome deve ser diferente do atual'));
     }
 
@@ -42,9 +42,15 @@ class EditRifaUsecaseImp implements EditRifaUsecase {
     for (var player in rifa.players) {
       if (player.name == newName.trim().toUpperCase()) {
         nameExist = true;
-        player.value += value;
         player.times += times;
         player.choiceNumbers.addAll(choiceNumbers);
+
+        if (player.times > rifa.numbersPromotion) {
+          player.value = times * rifa.promotionValue;
+        } else {
+          player.value += value;
+        }
+
         break;
       }
     }

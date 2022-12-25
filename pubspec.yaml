@@ -40,10 +40,24 @@ dependencies:
   currency_text_input_formatter: ^2.1.8
   flutter_bloc: ^8.1.1
 
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/appLogo.jpg"
+  android: true
+  ios: true
+
+flutter_icons:
+  adaptive_icon_background: "#FFFFFF"
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/logo.png"  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.11.0
+  flutter_native_splash: ^2.2.16
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -51,10 +65,6 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
 
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/appLogo.jpg"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

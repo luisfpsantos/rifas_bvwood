@@ -113,6 +113,8 @@ class AddRifaUsecaseImp implements AddRifaUsecase {
         value: value,
         players: players,
         rifa: rifa,
+        numbersPromotion: promocao ?? 0,
+        promotionValue: valorPromocao ?? 0,
       ),
     );
   }
