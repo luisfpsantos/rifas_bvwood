@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/player_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/entities/rifa_entity.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/domain/usecases/check_rifa.usecase.dart';
 import 'package:rifas_bvwood/app/features/checkRifa/presenter/blocs/checkRifabloc/check_rifa_bloc.dart';
@@ -35,10 +37,12 @@ class _CheckRifaViewState extends State<CheckRifaView> {
       ),
       body: Padding(
         padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-        child: BlocBuilder<CheckRifaBloc, CheckRifaStates>(
+        child: BlocConsumer<CheckRifaBloc, CheckRifaStates>(
           bloc: _bloc,
+          listener: (_, state) {
+            if (state is ShowResultState) _resultDialog(_, state.players);
+          },
           builder: (context, state) {
-            print(state);
             Widget body = Container();
 
             if (state is IdleState) {
@@ -62,7 +66,7 @@ class _CheckRifaViewState extends State<CheckRifaView> {
               );
             }
 
-            if (state is HaveRifasState) {
+            if (state is HaveRifasState || state is ShowResultState) {
               body = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -70,22 +74,29 @@ class _CheckRifaViewState extends State<CheckRifaView> {
                       style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 15),
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: rifas.length,
-                      separatorBuilder: (context, index) => const Divider(),
-                      itemBuilder: (_, i) {
-                        return ListTile(
-                          title: Text('Rifa ${rifas[i].id}'),
-                          tileColor: Colors.grey[200],
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                          trailing: IconButton(
-                              onPressed: () => _editRifaModal(_, rifas[i]),
-                              icon: const Icon(Icons.edit)),
-                        );
-                      },
+                    child: Scrollbar(
+                      child: ListView.separated(
+                        itemCount: rifas.length,
+                        separatorBuilder: (context, index) => const Divider(),
+                        itemBuilder: (_, i) {
+                          return ListTile(
+                            title: Text('Rifa ${rifas[i].id}'),
+                            tileColor: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15)),
+                            trailing: IconButton(
+                                onPressed: () => _editRifaModal(_, rifas[i]),
+                                icon: const Icon(Icons.edit)),
+                          );
+                        },
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                      onPressed: () => _bloc.add(BtnCheckRifa(rifas)),
+                      child: const Text('Conferir rifas')),
+                  const SizedBox(height: 10),
                 ],
               );
             }
@@ -97,8 +108,128 @@ class _CheckRifaViewState extends State<CheckRifaView> {
     );
   }
 
+  void _resultDialog(BuildContext context, List<PlayerEntity> players) async {
+    final result = TextEditingController();
+    bool showNamesWithValues = false;
+    bool showAll = false;
+
+    String rifaWithoutValues = '';
+    String rifaWithValues = '';
+    String rifaAll = '';
+    num valorTotal = 0;
+    int numeros = 0;
+
+    for (var player in players) {
+      valorTotal += player.value;
+      numeros += player.choiceNumbers.length;
+      rifaWithoutValues += '${player.name} ${player.times}\n\n';
+      rifaWithValues +=
+          '${player.name} ${player.times} __ R\$ ${player.value.toStringAsFixed(2)}\n\n';
+      rifaAll +=
+          '${player.name} ${player.times} __ R\$ ${player.value.toStringAsFixed(2)}\n     ${player.choiceNumbers.map((e) => 'N° ${e.number.toString().padLeft(2, '0')} __ Rifa: ${e.idRifa}\n     ').join()}\n\n';
+    }
+
+    result.text = rifaAll;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.white,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Resultados'),
+              centerTitle: true,
+              elevation: 0,
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: result.text));
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copiado com sucesso!')),
+                    );
+                  },
+                  icon: const Icon(Icons.copy),
+                )
+              ],
+            ),
+            body: Container(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black),
+                      children: [
+                        const TextSpan(text: 'Valor total das rifa(s): '),
+                        TextSpan(
+                          text: 'R\$ ${valorTotal.toStringAsFixed(2)}\n',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: 'Números jogados: '),
+                        TextSpan(
+                          text: '$numeros',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
+                  Row(children: [
+                    const Text('Mostrar nomes c/valores?'),
+                    Switch(
+                        value: showNamesWithValues,
+                        onChanged: (value) {
+                          setState(() {
+                            showNamesWithValues = value;
+                            if (showNamesWithValues) {
+                              showAll = false;
+                              result.text = rifaWithValues;
+                            } else {
+                              result.text = rifaWithoutValues;
+                            }
+                          });
+                        })
+                  ]),
+                  Row(children: [
+                    const Text('Mostrar tudo?'),
+                    Switch(
+                        value: showAll,
+                        onChanged: (value) {
+                          setState(() {
+                            showAll = value;
+                            if (showAll) {
+                              showNamesWithValues = false;
+                              result.text = rifaAll;
+                            } else {
+                              result.text = rifaWithoutValues;
+                            }
+                          });
+                        })
+                  ]),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: result,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      readOnly: true,
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _editRifaModal(BuildContext context, RifaEntity rifa) async {
-    var editRifa = await showModalBottomSheet(
+    await showModalBottomSheet(
       isScrollControlled: true,
       constraints:
           BoxConstraints(maxHeight: MediaQuery.of(context).size.height - 50),
